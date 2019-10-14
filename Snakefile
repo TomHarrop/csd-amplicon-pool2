@@ -165,7 +165,7 @@ rule freebayes:
 
 rule merge_bam: # for visualisation
     input:
-        expand('output/020_mapped/{{run}}/{indiv}.sam',
+        expand('output/020_mapped/{{run}}/{indiv}_sorted.bam',
                indiv=all_indivs)
     output:
         'output/020_mapped/{run}/merged.bam'
