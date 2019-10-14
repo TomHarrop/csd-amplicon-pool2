@@ -60,8 +60,9 @@ all_bc = sorted(set(glob_wildcards('data/reads/minion/pass/{bc}/{id}.fastq').bc)
 rule target:
     input:
         expand('output/050_derived-alleles/{run}/all-indivs_aa.fa',
-               run=['flongle']),     # not enough RAM to basecall minion run
-        'output/020_mapped/flongle/merged.bam'
+               run=['flongle', 'minion']),     # not enough RAM to basecall minion run
+        'output/020_mapped/flongle/merged.bam',
+        'output/020_mapped/minion/merged.bam'
 
 
 rule translate_consensus:
