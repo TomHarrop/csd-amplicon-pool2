@@ -50,7 +50,12 @@ bc_to_indiv = {indiv_to_bc[x]: x for x in indiv_to_bc.keys()}
 # exclude barcode 25
 all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 
-all_bc = sorted(set(glob_wildcards('data/reads/minion/pass/{bc}/{id}.fastq').bc))
+# clean the bamfile?
+# @SQ SN:NW_020555893.1   LN:21390
+# samtools view -h -F 2308 -s 0.01 -O BAM merged.bam > filtered.bam
+# samtools index filtered.bam
+
+
 
 #########
 # RULES #
@@ -162,7 +167,6 @@ rule freebayes:
         '{input.bam} '
         '> {output} '
         '2> {log}'
-
 
 rule merge_bam: # for visualisation
     input:
