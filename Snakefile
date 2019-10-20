@@ -23,9 +23,12 @@ def aggregate_raw_reads(wildcards):
 
 sample_key = 'data/Pool 2 barcodes.csv'
 
+bbduk_container = 'shub://TomHarrop/singularity-containers:bbmap_38.00'
 bioconductor_container = 'shub://TomHarrop/singularity-containers:bioconductor_3.9'
 biopython_container = 'shub://TomHarrop/singularity-containers:biopython_1.73'
+clustalo = 'shub://TomHarrop/singularity-containers:clustalo_1.2.4'
 freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
+medaka = '/home/tom/Projects/singularity-containers/img/medaka_7574cf1.sif'
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
@@ -64,11 +67,57 @@ all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 
 rule target:
     input:
-        expand('output/050_derived-alleles/{run}/all-indivs_aa.fa',
-               run=['flongle', 'minion']),     # not enough RAM to basecall minion run
-        'output/020_mapped/flongle/merged.bam',
-        'output/020_mapped/minion/merged.bam'
+        expand('output/035_medaka/flongle/{indiv}/round_1_phased.vcf.gz',
+               indiv=all_indivs)
+        # expand('output/050_derived-alleles/{run}/all-indivs_aa.fa',
+        #        run=['flongle']),     # not enough RAM to basecall minion run
+        # 'output/050_derived-alleles/flongle/all-indivs_aa.faa',
+        # 'output/050_derived-alleles/flongle/drones_aa.fa'
+        # 'output/020_mapped/flongle/merged.bam'
 
+# extract and analyse results
+rule align_consensus:
+    input:
+        'output/050_derived-alleles/{run}/all-indivs_aa.fa'
+    output:
+        aln = 'output/050_derived-alleles/{run}/all-indivs_aa.faa',
+        dist = 'output/050_derived-alleles/{run}/all-indivs_aa.dist'
+    log:
+        'output/logs/050_derived-alleles/{run}-clustalo.fa'
+    threads:
+        multiprocessing.cpu_count()
+    singularity:
+        clustalo
+    shell:
+        'clustalo '
+        '-i {input} '
+        '--threads {threads} '
+        '--dealign '
+        '--full '
+        '--out {output.aln} '
+        '--distmat-out {output.dist} '
+        '&> {log}'
+
+rule drones_only:
+    input:
+        'output/050_derived-alleles/{run}/all-indivs_aa.fa'
+    output:
+        'output/050_derived-alleles/{run}/drones_aa.fa'
+    log:
+        'output/logs/050_derived-alleles/{run}-filterbyname.log'
+    threads:
+        1
+    singularity:
+        bbduk_container
+    shell:
+        'filterbyname.sh '
+        'in={input} '
+        'out={output} '
+        'names=DR '
+        'substring=name '
+        'include=t '
+        'ignorejunk=t '
+        '2> {log}'
 
 rule translate_consensus:
     input:
@@ -108,7 +157,7 @@ rule condense_cds:
 rule extract_derived_cds:
     input:
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna',
-        regions = 'output/040_variant-annotation/csd_regions.txt',
+        regions = 'output/040_variant-annotation/hvr_dt.txt',
         vcf = 'output/040_variant-annotation/{run}_csd_reheadered.vcf.gz'
     output:
         temp('output/050_derived-alleles/{run}/{indiv}_consensus.fa')
@@ -146,6 +195,35 @@ rule filter_csd_variants:
     script:
         'src/filter_csd_variants.R'
 
+# calling
+rule medaka:
+    input:
+        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
+        fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
+    output:
+        'output/035_medaka/{run}/{indiv}/round_1_phased.vcf.gz',
+        'output/035_medaka/{run}/{indiv}/round_1_phased.vcf.gz.tbi'
+    log:
+        'output/logs/035_medaka/{run}_{indiv}.log'
+    params:
+        wd = 'output/035_medaka/{run}/{indiv}',
+        snp_model = 'r941_min_diploid_snp',
+        var_model = 'r941_min_high'
+    threads:
+        1
+    singularity:
+        medaka
+    shell:
+        'export TF_FORCE_GPU_ALLOW_GROWTH=true '
+        '; '
+        'medaka_variant '
+        '-i {input.bam} '
+        '-f {input.fa} '
+        '-o {params.wd} '
+        '-s {params.snp_model} '
+        '-m {params.var_model} '
+        '-t {threads} '
+        '&> {log}'
 
 rule freebayes:
     input:
@@ -168,6 +246,8 @@ rule freebayes:
         '> {output} '
         '2> {log}'
 
+
+# mapping
 rule merge_bam: # for visualisation
     input:
         expand('output/020_mapped/{{run}}/{indiv}_sorted.bam',
@@ -245,6 +325,7 @@ rule map_to_genome:
         '> {output} '
         '2> {log}'
 
+# processing
 rule aggregate_reads:
     input:
         aggregate_raw_reads
@@ -275,17 +356,17 @@ rule prepare_ref:
 
 
 # generic csd rules
-rule extract_csd_regions:
+rule extract_hvr_exon:
     input:
         gff = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.gff'
     output:
-        regions = 'output/040_variant-annotation/csd_regions.txt'
+        regions = 'output/040_variant-annotation/hvr_dt.txt'
     log:
-        'output/logs/040_variant-annotation/extract_csd_regions.log'
+        'output/logs/040_variant-annotation/extract_hvr_exon.log'
     singularity:
         bioconductor_container
     script:
-        'src/extract_csd_regions.R'
+        'src/extract_hvr_exon.R'
 
 
 # generic index rule
@@ -297,6 +378,8 @@ rule index_vcf:
         tbi = 'output/{folder}/{file}.vcf.gz.tbi'
     log:
         'output/logs/{folder}/{file}_index-vcf.log'
+    wildcard_constraints:
+        folder = '(?!medaka)'
     singularity:
         samtools_container
     shell:
