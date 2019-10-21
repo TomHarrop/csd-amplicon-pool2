@@ -68,17 +68,18 @@ all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 
 rule target:
     input:
-        'output/050_derived-alleles/flongle/all-indivs_aa.faa'
+        'output/050_derived-alleles/flongle/all-indivs_aa.faa',
+        'output/050_derived-alleles/flongle/drones_aa.faa',
 
 # extract and analyse results
 rule align_consensus:
     input:
-        'output/050_derived-alleles/{run}/all-indivs_aa.fa'
+        'output/050_derived-alleles/{run}/{file}_aa.fa'
     output:
-        aln = 'output/050_derived-alleles/{run}/all-indivs_aa.faa',
-        dist = 'output/050_derived-alleles/{run}/all-indivs_aa.dist'
+        aln = 'output/050_derived-alleles/{run}/{file}_aa.faa',
+        dist = 'output/050_derived-alleles/{run}/{file}_aa.dist'
     log:
-        'output/logs/050_derived-alleles/{run}-clustalo.fa'
+        'output/logs/050_derived-alleles/{run}-{file}-clustalo.fa'
     threads:
         multiprocessing.cpu_count()
     singularity:
