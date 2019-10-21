@@ -8,26 +8,23 @@ library(data.table)
 library(GenomicFeatures)
 library(VariantAnnotation)
 
-gff_file <- snakemake@input[["gff"]]
+txdb_file <- snakemake@input[["txdb"]]
+fa_file <- snakemake@input[["fa"]]
 vcf_file <- snakemake@input[["vcf"]]
 tbi_file <- snakemake@input[["tbi"]]
-fa_file <- snakemake@input[["fa"]]
 
 csd_vcf <- snakemake@output[["csd"]]
-coding_file <- snakemake@output[["coding"]]
 
-# gff_file <- "data/GCF_003254395.2_Amel_HAv3.1_genomic.gff"
+# dev 
+# txdb_file <- "output/005_ref/txdb.sqlite"
 # fa_file <- "data/GCF_003254395.2_Amel_HAv3.1_genomic.fna"
-# vcf_file <- "output/030_freebayes/flongle/variants.vcf.gz"
-# tbi_file <- "output/030_freebayes/flongle/variants.vcf.gz.tbi"
-# csd_vcf <- "test/csd.vcf"
+# vcf_file <- "output/035_medaka/flongle/BB24_41/round_1_phased.vcf.gz"
+# tbi_file <- "output/035_medaka/flongle/BB24_41/round_1_phased.vcf.gz.tbi"
+# csd_vcf <- "test/flongle-BB24_41-csd.vcf"
+
 
 # read the txdb
-txdb <- makeTxDbFromGFF(file = gff_file,
-                        format = "gff3",
-                        dataSource = "Amel_HAv3.1",
-                        organism = "Apis mellifera",
-                        taxonomyId = 7460)
+txdb <- AnnotationDbi::loadDb(txdb_file)
 
 # load the fasta
 fa <- FaFile(fa_file, paste0(fa_file, ".fai"))
@@ -44,15 +41,14 @@ rm(vcf, fa, txdb)
 gc(TRUE)
 
 # subset by gene-level coding variants
-goi_ids <- "Csd"
-rng <- coding[coding$GENEID %in% goi_ids &
-                  coding$QUAL > 30 &
+rng <- coding[coding$GENEID == "Csd" &
+                  coding$QUAL > 20 &
                   coding$CONSEQUENCE == "nonsynonymous"]
 vcf_rng <- readVcf(tabix_file, param = rng)
+qual(vcf_rng) <- as.integer(round(qual(vcf_rng), 0))
 
 # write output
 writeVcf(vcf_rng, csd_vcf, index = FALSE)
-saveRDS(coding, coding_file)
 
 # log
 sessionInfo()

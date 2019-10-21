@@ -28,7 +28,7 @@ bioconductor_container = 'shub://TomHarrop/singularity-containers:bioconductor_3
 biopython_container = 'shub://TomHarrop/singularity-containers:biopython_1.73'
 clustalo = 'shub://TomHarrop/singularity-containers:clustalo_1.2.4'
 freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
-medaka = 'shub://TomHarrop/singularity-containers:medaka_7574cf1'
+medaka = '/home/tom/Projects/singularity-containers/img/medaka_7574cf1.sif'
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
@@ -52,6 +52,7 @@ bc_to_indiv = {indiv_to_bc[x]: x for x in indiv_to_bc.keys()}
 
 # exclude barcode 25
 all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
+# all_indivs = ['BB44_60', 'WS20_81', 'TY17_49']
 
 # clean the bamfile?
 # @SQ SN:NW_020555893.1   LN:21390
@@ -67,13 +68,7 @@ all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 
 rule target:
     input:
-        expand('output/035_medaka/flongle/{indiv}/round_1_phased.vcf.gz',
-               indiv=all_indivs)
-        # expand('output/050_derived-alleles/{run}/all-indivs_aa.fa',
-        #        run=['flongle']),     # not enough RAM to basecall minion run
-        # 'output/050_derived-alleles/flongle/all-indivs_aa.faa',
-        # 'output/050_derived-alleles/flongle/drones_aa.fa'
-        # 'output/020_mapped/flongle/merged.bam'
+        'output/050_derived-alleles/flongle/all-indivs_aa.faa'
 
 # extract and analyse results
 rule align_consensus:
@@ -131,7 +126,7 @@ rule translate_consensus:
 
 rule combine_cds:
     input:
-        expand('output/050_derived-alleles/{{run}}/{indiv}_consensus_condensed.fa',
+        expand('output/050_derived-alleles/{{run}}/{indiv}/cds.fa',
                indiv=all_indivs)
     output:
         'output/050_derived-alleles/{run}/consensus_all-indivs.fa'
@@ -142,9 +137,9 @@ rule combine_cds:
 
 rule condense_cds:
     input:
-        'output/050_derived-alleles/{run}/{indiv}_consensus.fa'
+        'output/000_tmp/{run}/{indiv}/cds.fa'
     output:
-        temp('output/050_derived-alleles/{run}/{indiv}_consensus_condensed.fa')
+        'output/050_derived-alleles/{run}/{indiv}/cds.fa'
     params:
         header = '>{indiv}'
     singularity:
@@ -157,10 +152,10 @@ rule condense_cds:
 rule extract_derived_cds:
     input:
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna',
-        regions = 'output/040_variant-annotation/hvr_dt.txt',
-        vcf = 'output/040_variant-annotation/{run}_csd_reheadered.vcf.gz'
+        regions = 'output/005_ref/hvr_dt.txt',
+        vcf = 'output/040_variant-annotation/{run}/{indiv}/filtered.vcf.gz'
     output:
-        temp('output/050_derived-alleles/{run}/{indiv}_consensus.fa')
+        'output/000_tmp/{run}/{indiv}/cds.fa'
     log:
         'output/logs/050_derived-alleles/{run}_{indiv}_consensus.log'
     singularity:
@@ -172,37 +167,115 @@ rule extract_derived_cds:
         '2> {log} '
         '| '
         'bcftools consensus '
-        '-s {wildcards.run}_{wildcards.indiv} '
+        '-s {wildcards.indiv} '
         '-H 1 '
         '{input.vcf} '
         '> {output} '
         '2>> {log}'
 
 
+# use the filtered list to extract SNPs from the non-broken VCF
+rule extract_filtered_variants:
+    input:
+        vcf = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz',
+        keep = 'output/000_tmp/{run}/{indiv}/snps-to-keep.txt'
+    output:
+        'output/040_variant-annotation/{run}/{indiv}/filtered.vcf'
+    singularity:
+        samtools_container
+    shell:
+        'bcftools view '
+        '--include ID=@{input.keep} '
+        '{input.vcf} '
+        '> {output}'
+
+
+rule list_filtered_variants:
+    input:
+        'output/000_tmp/{run}/{indiv}/csd.vcf'
+    output:
+        'output/000_tmp/{run}/{indiv}/snps-to-keep.txt'
+    singularity:
+        samtools_container
+    shell:
+        'grep -v "^#" {input} '
+        '| '
+        'cut -f3 '
+        '> {output}'
+
 rule filter_csd_variants:
     input:
-        gff = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.gff',
-        vcf = 'output/030_freebayes/{run}/variants.vcf.gz',
-        tbi = 'output/030_freebayes/{run}/variants.vcf.gz.tbi',
+        txdb = 'output/005_ref/txdb.sqlite',
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna',
+        vcf = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz',
+        tbi = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz.tbi',
     output:
-        coding = 'output/040_variant-annotation/{run}_coding.Rds',
-        csd = 'output/040_variant-annotation/{run}_csd.vcf',
+        csd = 'output/000_tmp/{run}/{indiv}/csd.vcf'
     log:
-        'output/logs/040_variant-annotation/{run}_filter_csd_variants.log'
+        'output/logs/040_variant-annotation/{run}-{indiv}-filter_csd_variants.log'
     singularity:
         bioconductor_container
     script:
         'src/filter_csd_variants.R'
 
+
+rule add_snp_ids:   # otherwise annotate_variants makes them up
+    input:
+        'output/000_tmp/{run}/{indiv}/withsample.vcf'
+    output:
+        'output/000_tmp/{run}/{indiv}/withid.vcf'
+    singularity:
+        samtools_container
+    shell:
+        'bcftools annotate '
+        '-I \'%CHROM\:%POS\_%REF\/%FIRST_ALT\' '
+        '{input} > {output}'
+
 # calling
+rule merge_medaka_samples:  # DOESN'T WORK, RUN PER INDIV
+    input:
+        expand('output/000_tmp/{{run}}-{indiv}.vcf.gz',
+               indiv=all_indivs)
+    output:
+        vcf = 'output/035_medaka/{run}/all_indivs.vcf',
+    log:
+        'output/logs/035_medaka/{run}_merge.log'
+    threads:
+        multiprocessing.cpu_count()
+    singularity:
+        samtools_container
+    shell:
+        'bcftools merge '
+        '--missing-to-ref '
+        '--merge all '
+        '--threads {threads} '
+        '--output-type u '
+        '{input} '
+        '2> {log} '
+        '| '
+        'bcftools sort '
+        '--output-file {output.vcf} '
+        '--output-type v '
+        '- '
+        '2>> {log}'
+
+rule add_sample_to_medaka:
+    input:
+        'output/035_medaka/{run}/{indiv}/round_1_phased.vcf'
+    output:
+        'output/000_tmp/{run}/{indiv}/withsample.vcf'
+    singularity:
+        samtools_container
+    shell:
+        'sed -e \'/^#CHROM/s/SAMPLE/{wildcards.indiv}/\' '
+        '{input} > {output}'
+
 rule medaka:
     input:
         bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
     output:
-        'output/035_medaka/{run}/{indiv}/round_1_phased.vcf.gz',
-        'output/035_medaka/{run}/{indiv}/round_1_phased.vcf.gz.tbi'
+        'output/035_medaka/{run}/{indiv}/round_1_phased.vcf'
     log:
         'output/logs/035_medaka/{run}_{indiv}.log'
     params:
@@ -326,6 +399,18 @@ rule map_to_genome:
         '2> {log}'
 
 # processing
+rule generate_txdb:
+    input:
+        gff = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.gff',
+    output:
+        txdb = 'output/005_ref/txdb.sqlite'
+    log:
+        'output/logs/005_ref/generate_txdb.log'
+    singularity:
+        bioconductor_container
+    script:
+        'src/generate_txdb.R'
+
 rule aggregate_reads:
     input:
         aggregate_raw_reads
@@ -360,9 +445,9 @@ rule extract_hvr_exon:
     input:
         gff = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.gff'
     output:
-        regions = 'output/040_variant-annotation/hvr_dt.txt'
+        regions = 'output/005_ref/hvr_dt.txt'
     log:
-        'output/logs/040_variant-annotation/extract_hvr_exon.log'
+        'output/logs/005_ref/extract_hvr_exon.log'
     singularity:
         bioconductor_container
     script:
@@ -378,8 +463,6 @@ rule index_vcf:
         tbi = 'output/{folder}/{file}.vcf.gz.tbi'
     log:
         'output/logs/{folder}/{file}_index-vcf.log'
-    wildcard_constraints:
-        folder = '(?!medaka)'
     singularity:
         samtools_container
     shell:
@@ -397,5 +480,3 @@ rule reheader_vcf:
         samtools_container
     shell:
         'grep -v "^##FILTER=All filters passed" {input} > {output}'
-
-
