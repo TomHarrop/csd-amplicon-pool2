@@ -4,7 +4,11 @@ library(data.table)
 library(ggtree)
 library(ggplot2)
 
-dist_dt <- fread("output/050_derived-alleles/flongle/all-indivs_aa.dist", header = FALSE)
+dist_file <- "output/050_derived-alleles/flongle/drones_aa.dist"
+dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/minion/all-indivs_aa.dist"
+dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/minion/drones_aa.dist"
+
+dist_dt <- fread(dist_file, header = FALSE)
 setnames(dist_dt, names(dist_dt), c("V1", dist_dt[, V1]))
 
 # turn it into a tree
@@ -27,7 +31,7 @@ type_order <- c("BB" = "Betta bees",
 
 annot[, type := plyr::revalue(type_code, type_order)]
 
-gp <- ggtree(gt, layout = "circular", size = 0.5) %<+% annot +
+gp <- ggtree(tree_data, layout = "rectangular", size = 0.5) %<+% annot +
     theme(legend.position="right",
           text = element_text(size = 8)) +
     scale_colour_viridis_d(guide = guide_legend(title = NULL)) +
@@ -35,9 +39,11 @@ gp <- ggtree(gt, layout = "circular", size = 0.5) %<+% annot +
                       guide = FALSE) +
     geom_tippoint(mapping = aes(size = tech_dup),
                   show.legend = FALSE) +
-    geom_tiplab2(mapping = aes(colour = type),
+    geom_tiplab(mapping = aes(colour = type),
                  show.legend = TRUE,
-                 size = 2)
+                 size = 4)
+
+gp
 
 ggsave("test/tree.pdf", gp, device = cairo_pdf, width = 140, height = 75, units = "mm")
 

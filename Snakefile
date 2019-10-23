@@ -68,8 +68,9 @@ all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 
 rule target:
     input:
-        'output/050_derived-alleles/flongle/all-indivs_aa.faa',
-        'output/050_derived-alleles/flongle/drones_aa.faa',
+        expand('output/050_derived-alleles/{run}/{file}_aa.faa',
+               run=['flongle', 'minion'],
+               file=['all-indivs', 'drones'])
 
 # extract and analyse results
 rule align_consensus:
@@ -176,6 +177,50 @@ rule extract_derived_cds:
 
 
 # use the filtered list to extract SNPs from the non-broken VCF
+rule merge_filtered_variants:  # DOESN'T WORK, RUN PER INDIV
+    input:
+        expand('output/040_variant-annotation/{{run}}/{indiv}/filtered.vcf.gz',
+               indiv=all_indivs)
+    output:
+        vcf = 'output/040_variant-annotation/{run}/all_indivs.vcf',
+    log:
+        'output/logs/040_variant-annotation/{run}_merge.log'
+    threads:
+        multiprocessing.cpu_count()
+    singularity:
+        samtools_container
+    shell:
+        'bcftools merge '
+        '--missing-to-ref '
+        '--merge all '
+        '--threads {threads} '
+        '--output-type u '
+        '{input} '
+        '2> {log} '
+        '| '
+        'bcftools sort '
+        '--output-file {output.vcf} '
+        '--output-type v '
+        '- '
+        '2>> {log}'
+
+# CONTIGL=$(awk '{printf("##contig=<ID=%s,length=%d>\\n",$1,$2);}' ../data/GCF_003254395.2_Amel_HAv3.1_genomic.fna.fai)
+
+# grep -v "^##contig" ../output/040_variant-annotation/flongle/DR02_04/filtered.vcf |
+# awk -v f="${CONTIGL}" \
+#  '/^#CHROM/ { printf(f);} {print;}'  > DR02_04.vcf
+
+# grep -v "^##contig" ../output/040_variant-annotation/flongle/DR02_94/filtered.vcf |
+# awk -v f="${CONTIGL}" \
+#  '/^#CHROM/ { printf(f);} {print;}'  > DR02_94.vcf
+
+
+# PicardCommandLine MergeVcfs \
+#     I=DR02_04.vcf \
+#     I=DR02_94.vcf \
+#     O=merged.vcf
+
+
 rule extract_filtered_variants:
     input:
         vcf = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz',
@@ -233,33 +278,6 @@ rule add_snp_ids:   # otherwise annotate_variants makes them up
         '{input} > {output}'
 
 # calling
-rule merge_medaka_samples:  # DOESN'T WORK, RUN PER INDIV
-    input:
-        expand('output/000_tmp/{{run}}-{indiv}.vcf.gz',
-               indiv=all_indivs)
-    output:
-        vcf = 'output/035_medaka/{run}/all_indivs.vcf',
-    log:
-        'output/logs/035_medaka/{run}_merge.log'
-    threads:
-        multiprocessing.cpu_count()
-    singularity:
-        samtools_container
-    shell:
-        'bcftools merge '
-        '--missing-to-ref '
-        '--merge all '
-        '--threads {threads} '
-        '--output-type u '
-        '{input} '
-        '2> {log} '
-        '| '
-        'bcftools sort '
-        '--output-file {output.vcf} '
-        '--output-type v '
-        '- '
-        '2>> {log}'
-
 rule add_sample_to_medaka:
     input:
         'output/035_medaka/{run}/{indiv}/round_1_phased.vcf'
