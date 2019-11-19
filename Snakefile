@@ -6,6 +6,7 @@ import multiprocessing
 import pathlib
 import re
 
+
 #############
 # FUNCTIONS #
 #############
@@ -17,6 +18,7 @@ def aggregate_raw_reads(wildcards):
     my_path = f'data/reads/{wildcards.run}/pass/{my_bc_folder}'
     my_files = pathlib.Path(my_path).glob('*.fastq')
     return([str(x) for x in my_files])
+
 
 ###########
 # GLOBALS #
@@ -34,6 +36,7 @@ medaka = ('shub://TomHarrop/ont-containers:medaka_7574cf1'
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
+
 
 ########
 # MAIN #
@@ -53,8 +56,9 @@ with open(sample_key, 'rt') as f:
 bc_to_indiv = {indiv_to_bc[x]: x for x in indiv_to_bc.keys()}
 
 # exclude barcode 25
-all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
+# all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 # all_indivs = ['BB44_60', 'WS20_81', 'TY17_49']
+all_indivs = ['BB44_60']
 
 # clean the bamfile?
 # @SQ SN:NW_020555893.1   LN:21390
@@ -443,6 +447,8 @@ rule aggregate_reads:
     # shell:
     #     'cat {input} > {output}'
     run:
+        print(f'input {input}')
+        print(f'output.fq {output}')
         with open(output.fq, 'wt') as f:
             for line in fileinput.input(input):
                 f.write(line)
