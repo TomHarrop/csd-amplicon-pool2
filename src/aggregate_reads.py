@@ -11,7 +11,7 @@ logging.basicConfig(
     level=logging.DEBUG)
 
 # catch files from snakemake
-input_list = snakemake.input[0]
+input_list = snakemake.input
 fq = snakemake.output['fq']
 
 logging.debug(f'input_list\n{input_list}')
