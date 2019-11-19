@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import csv
+import fileinput
 import multiprocessing
 import pathlib
 import re
@@ -435,9 +436,13 @@ rule aggregate_reads:
     input:
         aggregate_raw_reads
     output:
-        'output/010_raw/{run}/{indiv}.fq'
-    shell:
-        'cat {input} > {output}'
+        fq = 'output/010_raw/{run}/{indiv}.fq'
+    # shell:
+    #     'cat {input} > {output}'
+    run:
+        with open(output.fq, 'wt') as f:
+            for line in fileinput.input(input):
+                f.write(line)
 
 rule prepare_ref:
     input:
