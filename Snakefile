@@ -80,8 +80,11 @@ rule target:
                run=[
                    # 'flongle',
                    'minion'
-               ],
-               file=['all-indivs', 'drones'])
+                    ],
+               file=[
+                     'all-indivs'
+                     # 'drones'
+                    ])
 
 # extract and analyse results
 rule align_consensus:
@@ -139,8 +142,9 @@ rule translate_consensus:
 
 rule combine_cds:
     input:
-        expand('output/050_derived-alleles/{{run}}/{indiv}/cds.fa',
-               indiv=all_indivs)
+        expand('output/050_derived-alleles/{{run}}/{indiv}/cds_h{h}.fa',
+               indiv=all_indivs,
+               h=[1, 2])
     output:
         'output/050_derived-alleles/{run}/consensus_all-indivs.fa'
     singularity:
@@ -150,11 +154,11 @@ rule combine_cds:
 
 rule condense_cds:
     input:
-        'output/000_tmp/{run}/{indiv}/cds.fa'
+        'output/000_tmp/{run}/{indiv}/cds_h{h}.fa'
     output:
-        'output/050_derived-alleles/{run}/{indiv}/cds.fa'
+        'output/050_derived-alleles/{run}/{indiv}/cds_h{h}.fa'
     params:
-        header = '>{indiv}'
+        header = '>{indiv}_h{h}'
     singularity:
         samtools_container
     shell:
@@ -168,7 +172,8 @@ rule extract_derived_cds:
         regions = 'output/005_ref/hvr_dt.txt',
         vcf = 'output/040_variant-annotation/{run}/{indiv}/filtered.vcf.gz'
     output:
-        'output/000_tmp/{run}/{indiv}/cds.fa'
+        h1 = 'output/000_tmp/{run}/{indiv}/cds_h1.fa',
+        h2 = 'output/000_tmp/{run}/{indiv}/cds_h2.fa'
     log:
         'output/logs/050_derived-alleles/{run}_{indiv}_consensus.log'
     singularity:
@@ -183,8 +188,20 @@ rule extract_derived_cds:
         '-s {wildcards.indiv} '
         '-H 1 '
         '{input.vcf} '
-        '> {output} '
-        '2>> {log}'
+        '> {output.h1} '
+        '2>> {log} '
+        '; '
+        'samtools faidx '
+        '{input.fa} '
+        '$(cat {input.regions}) '
+        '2>> {log} '
+        '| '
+        'bcftools consensus '
+        '-s {wildcards.indiv} '
+        '-H 1 '
+        '{input.vcf} '
+        '> {output.h2} '
+        '2>> {log} '
 
 
 # use the filtered list to extract SNPs from the non-broken VCF
