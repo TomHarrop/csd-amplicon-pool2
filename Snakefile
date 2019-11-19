@@ -30,7 +30,7 @@ biopython_container = 'shub://TomHarrop/singularity-containers:biopython_1.73'
 clustalo = 'shub://TomHarrop/singularity-containers:clustalo_1.2.4'
 freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
 medaka = ('shub://TomHarrop/ont-containers:medaka_7574cf1'
-          '@2e10ba7f142261a1e87c66e4361b5ab6bb9088e2076037fd36111741be357ec3')
+          '@0a7f4c632e78b4c99afbe5b52a6838d01a0cabf3')
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
@@ -71,7 +71,10 @@ all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 rule target:
     input:
         expand('output/050_derived-alleles/{run}/{file}_aa.faa',
-               run=['flongle', 'minion'],
+               run=[
+                   # 'flongle',
+                   'minion'
+               ],
                file=['all-indivs', 'drones'])
 
 # extract and analyse results
