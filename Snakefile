@@ -447,12 +447,14 @@ rule aggregate_reads:
         fq = 'output/010_raw/{run}/{indiv}.fq'
     # shell:
     #     'cat {input} > {output}'
-    run:
-        print(f'input {input}')
-        print(f'output.fq {output}')
-        with open(output.fq, 'wt') as f:
-            for line in fileinput.input(input):
-                f.write(line)
+    # run:
+    #     print(f'input {input}')
+    #     print(f'output.fq {output}')
+    #     with open(output.fq, 'wt') as f:
+    #         for line in fileinput.input(input):
+    #             f.write(line)
+    shell:
+        'echo "i ran it" &> {output.fq}'
 
 rule prepare_ref:
     input:
