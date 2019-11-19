@@ -36,6 +36,8 @@ medaka = ('shub://TomHarrop/ont-containers:medaka_7574cf1'
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
+seqtk = ('shub://TomHarrop/seq-utils:seqtk_1.3r106'
+         '@fa5b5a3190e6c330ecc0dcb9483dbd4f46950fa0b0d126687123ffdb2d152897')
 
 
 ########
@@ -56,8 +58,8 @@ with open(sample_key, 'rt') as f:
 bc_to_indiv = {indiv_to_bc[x]: x for x in indiv_to_bc.keys()}
 
 # exclude barcode 25
-all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
-# all_indivs = ['BB44_60', 'WS20_81', 'TY17_49']
+# all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
+all_indivs = ['BB44_60', 'WS20_81', 'TY12_28']
 # all_indivs = ['BB44_60']
 
 # clean the bamfile?
@@ -401,9 +403,20 @@ rule sort_sam:
         '{output.bam} '
         '2>> {log}'
 
+
+rule filter_weird_reads:
+    input:
+        'output/010_raw/{run}/{indiv}.fq'
+    output:
+        pipe('{run}-{indiv}.fq')
+    singularity:
+        seqtk
+    shell:
+        'seqtk seq -C {input}'
+
 rule map_to_genome:
     input:
-        fq = 'output/010_raw/{run}/{indiv}.fq',
+        fq = '{run}-{indiv}.fq',
         ref = 'output/010_raw/honeybee_ref.mmi'
     output:
         temp('output/020_mapped/{run}/{indiv}.sam')
