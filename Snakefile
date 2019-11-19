@@ -444,9 +444,12 @@ rule aggregate_reads:
         aggregate_raw_reads
     output:
         fq = 'output/010_raw/{run}/{indiv}.fq'
-    run:
-        with open(output.fq, 'wt') as f:
-            f.write('hello world')
+    log:
+        'output/logs/010_raw/aggregate_reads_{run}-{indiv}.log'
+    singularity:
+        biopython_container
+    script:
+        'src/aggregate_reads.py'
     # shell:
     #     'cat {input} > {output.fq}'
     # run:

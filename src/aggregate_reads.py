@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+import fileinput
+import logging
+
+# set up log
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    filename=snakemake.log[0],
+    level=logging.DEBUG)
+
+# catch files from snakemake
+input_list = snakemake.input[0]
+fq = snakemake.output['fq']
+
+logging.debug(f'input_list\n{input_list}')
+logging.debug(f'fq\n{fq}')
+
+with open(fq, 'wt') as f:
+    for line in fileinput.input(input_list):
+        f.write(line)
+
