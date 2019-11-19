@@ -37,7 +37,7 @@ minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
 seqtk = ('shub://TomHarrop/seq-utils:seqtk_1.3r106'
-         '@fa5b5a3190e6c330ecc0dcb9483dbd4f46950fa0b0d126687123ffdb2d152897')
+         '@cd07278aabfe76ff52c524190ccbc5a5153a9061')
 
 
 ########
