@@ -412,7 +412,7 @@ rule filter_weird_reads:
     singularity:
         seqtk
     shell:
-        'seqtk seq -C {input}'
+        'seqtk seq -C {input} >> {output}'
 
 rule map_to_genome:
     input:
