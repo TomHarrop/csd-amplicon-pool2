@@ -28,7 +28,8 @@ bioconductor_container = 'shub://TomHarrop/singularity-containers:bioconductor_3
 biopython_container = 'shub://TomHarrop/singularity-containers:biopython_1.73'
 clustalo = 'shub://TomHarrop/singularity-containers:clustalo_1.2.4'
 freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
-medaka = 'shub://TomHarrop/singularity-containers:medaka_7574cf1'
+medaka = ('shub://TomHarrop/ont-containers:medaka_7574cf1'
+          '@2e10ba7f142261a1e87c66e4361b5ab6bb9088e2076037fd36111741be357ec3')
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'

@@ -4,9 +4,10 @@ library(data.table)
 library(ggtree)
 library(ggplot2)
 
-dist_file <- "output/050_derived-alleles/flongle/drones_aa.dist"
-dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/minion/all-indivs_aa.dist"
+
+# dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/minion/all-indivs_aa.dist"
 dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/minion/drones_aa.dist"
+# dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/flongle/drones_aa.dist"
 
 dist_dt <- fread(dist_file, header = FALSE)
 setnames(dist_dt, names(dist_dt), c("V1", dist_dt[, V1]))
@@ -25,26 +26,47 @@ annot[indiv %in% dup_indivs, tech_dup := TRUE]
 annot[!indiv %in% dup_indivs, tech_dup := NA]
 
 type_order <- c("BB" = "Betta bees",
-  "DR" = "Single drone",
-  "TY" = "Taylor's Pass",
-  "WS" = "Worker pool")
+                "DR" = "Single drone",
+                "TY" = "Taylor's Pass",
+                "WS" = "Worker pool")
 
 annot[, type := plyr::revalue(type_code, type_order)]
 
 gp <- ggtree(tree_data, layout = "rectangular", size = 0.5) %<+% annot +
-    theme(legend.position="right",
-          text = element_text(size = 8)) +
-    scale_colour_viridis_d(guide = guide_legend(title = NULL)) +
-    scale_size_manual(values = c(0.5),
-                      guide = FALSE) +
-    geom_tippoint(mapping = aes(size = tech_dup),
-                  show.legend = FALSE) +
-    geom_tiplab(mapping = aes(colour = type),
-                 show.legend = TRUE,
-                 size = 4)
+  xlim(c(-0.05, 0.28)) +
+  theme(legend.position="right",
+        text = element_text(size = 8)) +
+  scale_colour_viridis_d(guide = guide_legend(title = NULL)) +
+  scale_size_manual(values = c(0.5),
+                    guide = FALSE) +
+  geom_tippoint(mapping = aes(size = tech_dup),
+                show.legend = FALSE) +
+  geom_tiplab(mapping = aes(colour = type),
+               show.legend = TRUE,
+               size = 2)
 
 gp
 
-ggsave("test/tree.pdf", gp, device = cairo_pdf, width = 140, height = 75, units = "mm")
+# ggsave("test/all_indiv_minion.pdf",
+#        gp,
+#        device = cairo_pdf,
+#        width = 10,
+#        height = 7.5,
+#        units = "in")
+
+ggsave("test/drones_only_minion.pdf",
+       gp,
+       device = cairo_pdf,
+       width = 140,
+       height = 75,
+       units = "mm")
+
+# ggsave("test/drones_only_flongle.pdf",
+#        gp,
+#        device = cairo_pdf,
+#        width = 140,
+#        height = 75,
+#        units = "mm")
+
 
 saveRDS(gp, "test/tree.Rds")
