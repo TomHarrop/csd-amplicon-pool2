@@ -56,9 +56,9 @@ with open(sample_key, 'rt') as f:
 bc_to_indiv = {indiv_to_bc[x]: x for x in indiv_to_bc.keys()}
 
 # exclude barcode 25
-# all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
+all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 # all_indivs = ['BB44_60', 'WS20_81', 'TY17_49']
-all_indivs = ['BB44_60']
+# all_indivs = ['BB44_60']
 
 # clean the bamfile?
 # @SQ SN:NW_020555893.1   LN:21390
@@ -450,16 +450,6 @@ rule aggregate_reads:
         biopython_container
     script:
         'src/aggregate_reads.py'
-    # shell:
-    #     'cat {input} > {output.fq}'
-    # run:
-    #     print(f'input {input}')
-    #     print(f'output.fq {output}')
-    #     with open(output.fq, 'wt') as f:
-    #         for line in fileinput.input(input):
-    #             f.write(line)
-    # shell:
-    #     'echo "i ran it" &> {output.fq}'
 
 rule prepare_ref:
     input:

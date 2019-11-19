@@ -14,10 +14,11 @@ logging.basicConfig(
 input_list = snakemake.input
 fq = snakemake.output['fq']
 
-logging.debug(f'input_list\n{input_list}')
-logging.debug(f'fq\n{fq}')
+logging.debug('input_list')
+logging.debug(f'{input_list}')
+logging.debug('fq')
+logging.debug(f'{fq}')
 
 with open(fq, 'wt') as f:
     for line in fileinput.input(input_list):
         f.write(line)
-
