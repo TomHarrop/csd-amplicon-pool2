@@ -16,7 +16,6 @@ def aggregate_raw_reads(wildcards):
     my_bc_str = re.findall('\d+', my_bc)[0]
     my_bc_folder = 'barcode' + my_bc_str
     my_path = f'data/reads/{wildcards.run}/pass/{my_bc_folder}'
-    print(my_path)
     my_files = pathlib.Path(my_path).glob('*.fastq')
     return([str(x) for x in my_files])
 
@@ -445,8 +444,11 @@ rule aggregate_reads:
         aggregate_raw_reads
     output:
         fq = 'output/010_raw/{run}/{indiv}.fq'
-    shell:
-        'cat {input} > {output.fq}'
+    run:
+        with open(output.fq, 'wt') as f:
+            f.write('hello world')
+    # shell:
+    #     'cat {input} > {output.fq}'
     # run:
     #     print(f'input {input}')
     #     print(f'output.fq {output}')
