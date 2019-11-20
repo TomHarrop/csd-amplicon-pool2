@@ -426,13 +426,13 @@ rule map_to_genome:
     threads:
         1
     singularity:
-        ngmlr
+        ngmlr           # doesn't accept piped input
     shell:
         'ngmlr '
         '-r {input.ref} '
         '-q {input.fq} '
         '-o {output} '
-        '--rg-id {params.rg} '
+        '--rg-sm {params.rg} '
         '-t {threads} '
         '-x ont '
         '&> {log}'
