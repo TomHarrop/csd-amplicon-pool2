@@ -30,11 +30,11 @@ stop_iter = bamfile.fetch(hvr_chr, hvr_stop)
 stop_ids = [x.qname for x in stop_iter]
 logging.info(f'{len(stop_ids)} reads mapped to {hvr_chr}:{hvr_stop}')
 
-logging.info('Finding reads spanning {hvr_chr}:{hvr_start}-{hvr_stop}')
-span_ids = [x.qname for x in start_iter
-            if (x.qname in stop_ids
-                and len(x.seq) < 500
-                and x.mapq > 30)]
+logging.info(f'Finding reads spanning {hvr_chr}:{hvr_start}-{hvr_stop}')
+span_ids = sorted(set(x.qname for x in start_iter
+                      if (x.qname in stop_ids
+                          and len(x.seq) < 500
+                          and x.mapq > 30)))
 
 logging.info(f'Writing {len(span_ids)} ids to {id_file}')
 with open(id_file, 'wt') as f:
