@@ -415,7 +415,7 @@ rule sort_sam:
 
 rule map_to_genome:
     input:
-        fq = '{run}-{indiv}.fq',
+        fq = 'output/010_raw/{run}/{indiv}.fq',
         ref = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
     output:
         temp('output/020_mapped/{run}/{indiv}.sam')
