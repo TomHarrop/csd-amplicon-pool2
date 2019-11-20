@@ -34,6 +34,8 @@ freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
 medaka = ('shub://TomHarrop/ont-containers:medaka_v0.10.1'
           '@616f9abba91d1271dbba2ef245f97c59b65e68c5')
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
+ngmlr = ('shub://TomHarrop/align-utils:ngmlr_0.2.7'
+         '@6604e8d47ed8e442163752bc189e2f666acce22a')
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
 seqtk = ('shub://TomHarrop/seq-utils:seqtk_1.3r106'
@@ -386,6 +388,54 @@ rule sort_sam:
         '{output.bam} '
         '2>> {log}'
 
+# rule map_to_genome:
+#     input:
+#         fq = '{run}-{indiv}.fq',
+#         ref = 'output/010_raw/honeybee_ref.mmi'
+#     output:
+#         temp('output/020_mapped/{run}/{indiv}.sam')
+#     params:
+#         rg = '\'@RG\\tID:{run}_{indiv}\\tSM:{run}_{indiv}\''
+#     log:
+#         'output/logs/020_mapped/{run}/{indiv}.log'
+#     threads:
+#         1
+#     singularity:
+#         minimap_container
+#     shell:
+#         'minimap2 '
+#         '-t {threads} '
+#         '-ax map-ont '
+#         '-N 1 '
+#         '-R {params.rg} '
+#         '{input.ref} '
+#         '{input.fq} '
+#         '> {output} '
+#         '2> {log}'
+
+rule map_to_genome:
+    input:
+        fq = '{run}-{indiv}.fq',
+        ref = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
+    output:
+        temp('output/020_mapped/{run}/{indiv}.sam')
+    params:
+        rg = '{run}_{indiv}'
+    log:
+        'output/logs/020_mapped/{run}/{indiv}.log'
+    threads:
+        1
+    singularity:
+        ngmlr
+    shell:
+        'ngmlr '
+        '-r {input.ref} '
+        '-q {input.fq} '
+        '-o {output} '
+        '--rg-id {params.rg} '
+        '-t {threads} '
+        '-x ont '
+        '&> {log}'
 
 rule filter_weird_reads:
     input:
@@ -397,30 +447,6 @@ rule filter_weird_reads:
     shell:
         'seqtk seq -C {input} >> {output}'
 
-rule map_to_genome:
-    input:
-        fq = '{run}-{indiv}.fq',
-        ref = 'output/010_raw/honeybee_ref.mmi'
-    output:
-        temp('output/020_mapped/{run}/{indiv}.sam')
-    params:
-        rg = '\'@RG\\tID:{run}_{indiv}\\tSM:{run}_{indiv}\''
-    log:
-        'output/logs/020_mapped/{run}/{indiv}.log'
-    threads:
-        1
-    singularity:
-        minimap_container
-    shell:
-        'minimap2 '
-        '-t {threads} '
-        '-ax map-ont '
-        '-N 1 '
-        '-R {params.rg} '
-        '{input.ref} '
-        '{input.fq} '
-        '> {output} '
-        '2> {log}'
 
 # processing
 rule generate_txdb:
