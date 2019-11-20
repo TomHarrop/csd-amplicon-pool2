@@ -38,6 +38,8 @@ ngmlr = ('shub://TomHarrop/align-utils:ngmlr_8d76779'
          '@68c5d996516af3c9250fdde263bd8711f04f6b7f')
 porechop = ('shub://TomHarrop/ont-containers:porechop_0.2.4'
             '@d9b54eff12e72fd380f530f9e3e2b796b1958e31')
+pysam = ('shub://TomHarrop/seq-utils:pysam_0.15.3'
+         '@eb6e9de51b8f2178675729a29fc96201cf4edb17')
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
 seqtk = ('shub://TomHarrop/seq-utils:seqtk_1.3r106'
@@ -81,7 +83,16 @@ all_indivs = ['BB44_60', 'WS20_81', 'TY12_28']
 
 rule target:
     input:
-        expand('output/050_derived-alleles/{run}/{file}_aa.faa',
+        # expand('output/050_derived-alleles/{run}/{file}_aa.faa',
+        #        run=[
+        #            # 'flongle',
+        #            'minion'
+        #             ],
+        #        file=[
+        #              'all-indivs'
+        #              # 'drones'
+        #             ]),
+        expand('output/060_reassembly/{run}/{indiv}.fq',
                run=[
                    # 'flongle',
                    'minion'
@@ -90,6 +101,38 @@ rule target:
                      'all-indivs'
                      # 'drones'
                     ])
+
+
+# re-assembly pipeline
+rule extract_mapped_reads:
+    input:
+        ids = 'output/060_reassembly/{run}/{indiv}_read-ids.txt',
+        fq = 'output/010_raw/{run}/{indiv}_porechop.fq'
+    output:
+        'output/060_reassembly/{run}/{indiv}.fq'
+    singularity:
+        seqtk
+    shell:
+        'seqtk subseq '
+        '{input.fq} '
+        '{input.ids} '
+        '> {output}'
+
+
+rule extract_mapped_read_ids:
+    input:
+        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
+        bai = 'output/020_mapped/{run}/{indiv}_sorted.bam.bai'
+    output:
+        ids = 'output/060_reassembly/{run}/{indiv}_read-ids.txt'
+    log:
+        'output/logs/060_reassembly/{run}/{indiv}_extract_mapped_read_ids.log'
+    threads:
+        1
+    singularity:
+        pysam
+    script:
+        'src/extract_mapped_read_ids.py'
 
 # extract and analyse results
 rule align_consensus:
