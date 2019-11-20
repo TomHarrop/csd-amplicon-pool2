@@ -111,7 +111,7 @@ rule assemble_mapped_reads:
         outdir = 'output/060_reassembly/{run}/{indiv}',
         size = '500'
     threads:
-        multiprocessing.cpu_count
+        multiprocessing.cpu_count()
     log:
         'output/logs/060_reassembly/{run}/{indiv}_assemble.log'
     singularity:
