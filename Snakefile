@@ -104,7 +104,7 @@ rule target:
 # re-assembly pipeline
 rule assemble_mapped_reads:
     input:
-        'output/060_reassembly/{run}/{indiv}.fq'
+        fq = 'output/060_reassembly/{run}/{indiv}.fq'
     output:
         'output/060_reassembly/{run}/{indiv}/assembly.fasta'
     params:
