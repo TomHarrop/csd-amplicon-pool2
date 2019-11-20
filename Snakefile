@@ -30,6 +30,7 @@ bbduk_container = 'shub://TomHarrop/singularity-containers:bbmap_38.00'
 bioconductor_container = 'shub://TomHarrop/singularity-containers:bioconductor_3.9'
 biopython_container = 'shub://TomHarrop/singularity-containers:biopython_1.73'
 clustalo = 'shub://TomHarrop/singularity-containers:clustalo_1.2.4'
+flye = 'shub://TomHarrop/singularity-containers:flye_2.5'
 freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
 medaka = ('shub://TomHarrop/ont-containers:medaka_v0.10.1'
           '@616f9abba91d1271dbba2ef245f97c59b65e68c5')
@@ -92,7 +93,7 @@ rule target:
         #              'all-indivs'
         #              # 'drones'
         #             ]),
-        expand('output/060_reassembly/{run}/{indiv}.fq',
+        expand('output/060_reassembly/{run}/{indiv}/assembly.fasta',
                run=[
                    # 'flongle',
                    'minion'
@@ -101,6 +102,30 @@ rule target:
 
 
 # re-assembly pipeline
+rule assemble_mapped_reads:
+    input:
+        'output/060_reassembly/{run}/{indiv}.fq'
+    output:
+        'output/060_reassembly/{run}/{indiv}/assembly.fasta'
+    params:
+        outdir = 'output/060_reassembly/{run}/{indiv}'
+        size = '500'
+    threads:
+        multiprocessing.cpu_count
+    log:
+        'output/logs/060_reassembly/{run}/{indiv}_assemble.log'
+    singularity:
+        flye
+    shell:
+        'flye '
+        '--iterations 2 '
+        '--nano-raw {input.fq} '
+        '--genome-size {params.size} '
+        '--out-dir {params.outdir} '
+        '--threads {threads} '
+        '&>> {log}'
+
+
 rule extract_mapped_reads:
     input:
         ids = 'output/060_reassembly/{run}/{indiv}_read-ids.txt',
