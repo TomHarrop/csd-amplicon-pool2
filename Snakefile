@@ -36,6 +36,8 @@ medaka = ('shub://TomHarrop/ont-containers:medaka_v0.10.1'
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 ngmlr = ('shub://TomHarrop/align-utils:ngmlr_8d76779'
          '@68c5d996516af3c9250fdde263bd8711f04f6b7f')
+porechop = ('shub://TomHarrop/ont-containers:porechop_0.2.4'
+            '@')
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
 seqtk = ('shub://TomHarrop/seq-utils:seqtk_1.3r106'
@@ -415,7 +417,7 @@ rule sort_sam:
 
 rule map_to_genome:
     input:
-        fq = 'output/010_raw/{run}/{indiv}.fq',
+        fq = 'output/010_raw/{run}/{indiv}_porechop.fq',
         ref = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
     output:
         temp('output/020_mapped/{run}/{indiv}.sam')
@@ -440,7 +442,7 @@ rule map_to_genome:
 
 rule filter_weird_reads:
     input:
-        'output/010_raw/{run}/{indiv}.fq'
+        'output/010_raw/{run}/{indiv}_porechop.fq'
     output:
         pipe('{run}-{indiv}.fq')
     singularity:
@@ -448,6 +450,26 @@ rule filter_weird_reads:
     shell:
         'seqtk seq -C {input} >> {output}'
 
+rule remove_ont_adaptors:
+    input:
+        'output/010_raw/{run}/{indiv}.fq'
+    output:
+        'output/010_raw/{run}/{indiv}_porechop.fq'
+    log:
+        'output/logs/010_raw/remove_ont_adaptors_{run}-{indiv}.log'
+    threads:
+        8
+    singularity:
+        porechop
+    shell:
+        'porechop '
+        '-i {input} '
+        '-o {output} '
+        '--verbosity 2 '
+        '--threads {threads} '
+        '--check_reads 1000 '
+        '--discard_middle '
+        '&> {log}'
 
 # processing
 rule generate_txdb:
