@@ -97,10 +97,7 @@ rule target:
                    # 'flongle',
                    'minion'
                     ],
-               file=[
-                     'all-indivs'
-                     # 'drones'
-                    ])
+               indiv=all_indivs)
 
 
 # re-assembly pipeline
