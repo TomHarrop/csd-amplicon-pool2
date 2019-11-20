@@ -12,6 +12,7 @@ logging.basicConfig(
 
 
 my_bam = snakemake.input['bam']
+# my_bam = 'output/020_mapped/minion/WS20_81_sorted.bam'
 id_file = snakemake.output['ids']
 hvr_chr = 'NC_037640.1'
 hvr_start = 11771976
@@ -19,7 +20,7 @@ hvr_stop = 11772216
 
 logging.info(f'Reading {my_bam}')
 bamfile = pysam.AlignmentFile(my_bam, 'rb')
-logging.info(f'{my_bam} contains {my_bam.count()} reads')
+logging.info(f'{my_bam} contains {bamfile.count()} reads')
 
 logging.info(f'Finding reads mapped to {hvr_chr}:{hvr_start}')
 start_iter = bamfile.fetch(hvr_chr, hvr_start)
