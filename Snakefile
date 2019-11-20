@@ -420,7 +420,7 @@ rule map_to_genome:
     output:
         temp('output/020_mapped/{run}/{indiv}.sam')
     params:
-        rg = '{run}_{indiv}'
+        rg = '\'@SM:{run}_{indiv}\''
     log:
         'output/logs/020_mapped/{run}/{indiv}.log'
     threads:
@@ -432,7 +432,7 @@ rule map_to_genome:
         '-r {input.ref} '
         '-q {input.fq} '
         '-o {output} '
-        '--rg-sm {params.rg} '
+        '--rg-id {params.rg} '
         '-t {threads} '
         '-x ont '
         '&> {log}'
