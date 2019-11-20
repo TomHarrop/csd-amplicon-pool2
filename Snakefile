@@ -37,7 +37,7 @@ minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 ngmlr = ('shub://TomHarrop/align-utils:ngmlr_8d76779'
          '@68c5d996516af3c9250fdde263bd8711f04f6b7f')
 porechop = ('shub://TomHarrop/ont-containers:porechop_0.2.4'
-            '@')
+            '@d9b54eff12e72fd380f530f9e3e2b796b1958e31')
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
 seqtk = ('shub://TomHarrop/seq-utils:seqtk_1.3r106'
