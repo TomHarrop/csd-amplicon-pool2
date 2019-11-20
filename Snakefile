@@ -465,7 +465,7 @@ rule remove_ont_adaptors:
         'porechop '
         '-i {input} '
         '-o {output} '
-        '--verbosity 2 '
+        '--verbosity 1 '
         '--threads {threads} '
         '--check_reads 1000 '
         '--discard_middle '
