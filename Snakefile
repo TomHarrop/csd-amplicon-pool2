@@ -34,8 +34,8 @@ freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
 medaka = ('shub://TomHarrop/ont-containers:medaka_v0.10.1'
           '@616f9abba91d1271dbba2ef245f97c59b65e68c5')
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
-ngmlr = ('shub://TomHarrop/align-utils:ngmlr_0.2.7'
-         '@6604e8d47ed8e442163752bc189e2f666acce22a')
+ngmlr = ('shub://TomHarrop/align-utils:ngmlr_8d76779'
+         '@68c5d996516af3c9250fdde263bd8711f04f6b7f')
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
 seqtk = ('shub://TomHarrop/seq-utils:seqtk_1.3r106'
@@ -420,7 +420,7 @@ rule map_to_genome:
     output:
         temp('output/020_mapped/{run}/{indiv}.sam')
     params:
-        rg = '\'@SM:{run}_{indiv}\''
+        rg = '{run}_{indiv}'
     log:
         'output/logs/020_mapped/{run}/{indiv}.log'
     threads:
@@ -432,6 +432,7 @@ rule map_to_genome:
         '-r {input.ref} '
         '-q {input.fq} '
         '-o {output} '
+        '--rg-sm {params.rg} '
         '--rg-id {params.rg} '
         '-t {threads} '
         '-x ont '
