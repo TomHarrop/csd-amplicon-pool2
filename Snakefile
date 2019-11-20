@@ -31,8 +31,8 @@ bioconductor_container = 'shub://TomHarrop/singularity-containers:bioconductor_3
 biopython_container = 'shub://TomHarrop/singularity-containers:biopython_1.73'
 clustalo = 'shub://TomHarrop/singularity-containers:clustalo_1.2.4'
 freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
-medaka = ('shub://TomHarrop/ont-containers:medaka_7574cf1'
-          '@0a7f4c632e78b4c99afbe5b52a6838d01a0cabf3')
+medaka = ('TomHarrop/ont-containers:medaka_v0.10.1'
+          '@616f9abba91d1271dbba2ef245f97c59b65e68c5')
 minimap_container = 'shub://TomHarrop/singularity-containers:minimap2_2.11r797'
 sambamba_container = 'shub://TomHarrop/singularity-containers:sambamba_0.6.9'
 samtools_container = 'shub://TomHarrop/singularity-containers:samtools_1.9'
@@ -293,7 +293,6 @@ rule filter_csd_variants:
     script:
         'src/filter_csd_variants.R'
 
-
 rule add_snp_ids:   # otherwise annotate_variants makes them up
     input:
         'output/000_tmp/{run}/{indiv}/withsample.vcf'
@@ -328,7 +327,7 @@ rule medaka:
         'output/logs/035_medaka/{run}_{indiv}.log'
     params:
         wd = 'output/035_medaka/{run}/{indiv}',
-        snp_model = 'r941_min_diploid_snp',
+        snp_model = 'r941_min_high',
         var_model = 'r941_min_high'
     threads:
         1
@@ -345,28 +344,6 @@ rule medaka:
         '-m {params.var_model} '
         '-t {threads} '
         '&> {log}'
-
-rule freebayes:
-    input:
-        bam = expand('output/020_mapped/{{run}}/{indiv}_sorted.bam',
-                     indiv=all_indivs),
-        fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
-    output:
-        vcf = 'output/030_freebayes/{run}/variants.vcf'
-    params:
-        region = 'NC_037640.1:11771679-11781139'
-    log:
-        'output/logs/030_freebayes/{run}-freebayes.log'
-    singularity:
-        freebayes_container
-    shell:
-        'freebayes '
-        '--region {params.region} '
-        '-f {input.fa} '
-        '{input.bam} '
-        '> {output} '
-        '2> {log}'
-
 
 # mapping
 rule merge_bam: # for visualisation
