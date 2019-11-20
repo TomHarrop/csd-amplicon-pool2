@@ -108,7 +108,7 @@ rule assemble_mapped_reads:
     output:
         'output/060_reassembly/{run}/{indiv}/assembly.fasta'
     params:
-        outdir = 'output/060_reassembly/{run}/{indiv}'
+        outdir = 'output/060_reassembly/{run}/{indiv}',
         size = '500'
     threads:
         multiprocessing.cpu_count
