@@ -85,21 +85,21 @@ all_indivs = ['BB44_60', 'WS20_81', 'TY12_28']
 
 rule target:
     input:
-        # expand('output/050_derived-alleles/{run}/{file}_aa.faa',
-        #        run=[
-        #            # 'flongle',
-        #            'minion'
-        #             ],
-        #        file=[
-        #              'all-indivs'
-        #              # 'drones'
-        #             ]),
-        expand('output/060_reassembly/{run}/{indiv}.bam.bai',
+        expand('output/050_derived-alleles/{run}/{file}_aa.faa',
                run=[
                    # 'flongle',
                    'minion'
                     ],
-               indiv=all_indivs)
+               file=[
+                     'all-indivs'
+                     # 'drones'
+                    ]),
+        # expand('output/060_reassembly/{run}/{indiv}.bam.bai',
+        #        run=[
+        #            # 'flongle',
+        #            'minion'
+        #             ],
+        #        indiv=all_indivs)
 
 
 # re-assembly pipeline
@@ -398,7 +398,7 @@ rule add_sample_to_medaka:
 
 rule medaka:
     input:
-        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
+        bam = 'output/060_reassembly/{run}/{indiv}.bam',
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
     output:
         'output/035_medaka/{run}/{indiv}/round_1_phased.vcf',
