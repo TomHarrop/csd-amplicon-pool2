@@ -110,7 +110,7 @@ rule assemble_mapped_reads:
         'output/060_reassembly/{run}/{indiv}/canu.contigs.fasta'
     params:
         outdir = 'output/060_reassembly/{run}/{indiv}',
-        size = '500',
+        size = '0.01m',
         prefix = 'canu'
     threads:
         multiprocessing.cpu_count()
@@ -122,7 +122,7 @@ rule assemble_mapped_reads:
         'canu '
         '-p {params.prefix} '
         '-d {params.outdir} '
-        # 'genomeSize={params.size} '
+        'genomeSize={params.size} '
         'corMinCoverage=0 '
         'corOutCoverage=10000 '
         '-nanopore-raw {input.fq} '
