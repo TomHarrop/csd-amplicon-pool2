@@ -149,7 +149,8 @@ rule extract_bam_records:
         bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
         ids = 'output/060_reassembly/{run}/{indiv}_read-ids.txt'
     output:
-        'output/060_reassembly/{run}/{indiv}.bam'
+        bam = 'output/060_reassembly/{run}/{indiv}.bam',
+        bai = 'output/060_reassembly/{run}/{indiv}.bam.bai',
     log:
         'output/logs/060_reassembly/{run}/{indiv}_extract_bam_records.log'
     singularity:
@@ -160,7 +161,9 @@ rule extract_bam_records:
         'names={input.ids} '
         'include=t '
         'out={output} '
-        '2> {log}'
+        '2> {log} '
+        '; '
+        'samtools index {output.bam}'
 
 rule extract_mapped_read_ids:
     input:
