@@ -292,6 +292,7 @@ checkpoint extract_derived_cds:
     singularity:
         samtools_container
     shell:
+        'mkdir -p {output.haps} ; '
         'samtools faidx '
         '{input.fa} '
         '$(cat {input.regions}) '
