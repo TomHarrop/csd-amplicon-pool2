@@ -66,9 +66,9 @@ with open(sample_key, 'rt') as f:
 bc_to_indiv = {indiv_to_bc[x]: x for x in indiv_to_bc.keys()}
 
 # exclude barcode 25
-# all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
+all_indivs = [x for x in indiv_to_bc.keys() if indiv_to_bc[x] != 'BC25']
 # all_indivs = [x for x in all_indivs if x.startswith('BB')] # bb only
-all_indivs = ['BB44_60', 'WS20_81', 'TY12_28']
+# all_indivs = ['BB44_60', 'WS20_81', 'TY12_28']
 # all_indivs = ['BB44_60']
 
 # clean the bamfile?
