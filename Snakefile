@@ -94,7 +94,7 @@ rule target:
         #              'all-indivs'
         #              # 'drones'
         #             ]),
-        expand('output/060_reassembly/{run}/{indiv}/canu.contigs.fasta',
+        expand('output/060_reassembly/{run}/{indiv}_read-ids.txt',
                run=[
                    # 'flongle',
                    'minion'
