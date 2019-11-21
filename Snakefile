@@ -125,6 +125,8 @@ rule assemble_mapped_reads:
         'genomeSize={params.size} '
         'corMinCoverage=0 '
         'corOutCoverage=10000 '
+        'minReadLength=370 '
+        'minOverlapLength=370 '
         '-nanopore-raw {input.fq} '
         '&> {log}'
 
