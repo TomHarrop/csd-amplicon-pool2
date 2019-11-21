@@ -453,7 +453,8 @@ rule sort_sam:
     input:
         'output/020_mapped/{run}/{indiv}.sam'
     output:
-        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam'
+        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
+        bai = 'output/020_mapped/{run}/{indiv}_sorted.bam.bai'
     log:
         'output/logs/020_mapped/{run}/{indiv}_sort.log'
     threads:
