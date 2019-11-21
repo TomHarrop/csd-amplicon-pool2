@@ -297,6 +297,8 @@ rule extract_derived_cds:
         '> {output.h2} '
         '> {output} '
         '2>> {log} '
+        '| '
+        'if [ -s {output.h2} ] ; then rm {output.h2} ; fi '
 
 # use the filtered list to extract SNPs from the non-broken VCF
 rule merge_filtered_variants:  # DOESN'T WORK, RUN PER INDIV
