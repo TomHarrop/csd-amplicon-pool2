@@ -17,6 +17,7 @@ id_file = snakemake.output['ids']
 hvr_chr = 'NC_037640.1'
 hvr_start = 11771976
 hvr_stop = 11772216
+hvr_size = hvr_stop - hvr_start
 
 logging.info(f'Reading {my_bam}')
 bamfile = pysam.AlignmentFile(my_bam, 'rb')
