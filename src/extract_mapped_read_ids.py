@@ -22,21 +22,18 @@ logging.info(f'Reading {my_bam}')
 bamfile = pysam.AlignmentFile(my_bam, 'rb')
 logging.info(f'{my_bam} contains {bamfile.count()} reads')
 
-logging.info(f'Finding reads mapped to {hvr_chr}:{hvr_start}')
-start_iter = bamfile.fetch(hvr_chr, hvr_start)
+logging.info(f'Finding reads mapped to {hvr_chr}:{hvr_start}-{hvr_stop}')
+span_iter = bamfile.fetch(hvr_chr, hvr_start, hvr_stop)
 
-logging.info(f'Finding reads mapped to {hvr_chr}:{hvr_stop}')
-stop_iter = bamfile.fetch(hvr_chr, hvr_stop)
-stop_ids = [x.qname for x in stop_iter]
-logging.info(f'{len(stop_ids)} reads mapped to {hvr_chr}:{hvr_stop}')
-
-logging.info(f'Finding reads spanning {hvr_chr}:{hvr_start}-{hvr_stop}')
-span_ids = sorted(set(x.qname for x in start_iter
-                      if (x.qname in stop_ids
+logging.info(f'Extracting reads with > 90% coverage of HVR exon')
+kept_ids = sorted(set(x.qname for x in span_iter
+                      if (x.get_overlap(hvr_start, hvr_stop) / hvr_size > 0.9
                           and len(x.seq) < 500
+                          and len(x.seq) > 370
                           and x.mapq > 30)))
+logging.info(f'{len(kept_ids)} reads kept')
 
-logging.info(f'Writing {len(span_ids)} ids to {id_file}')
+logging.info(f'Writing ids to {id_file}')
 with open(id_file, 'wt') as f:
-    f.write('\n'.join(span_ids))
+    f.write('\n'.join(kept_ids))
     f.write('\n')
