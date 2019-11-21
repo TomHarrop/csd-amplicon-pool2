@@ -315,7 +315,7 @@ checkpoint extract_derived_cds:
         '{input.vcf} '
         '> {output.haps}/h2.fa '
         '2>> {log} '
-        '| '
+        '; '
         'if [ -s {output.haps}/h2.fa ] ; '
         'then rm {output.haps}/h2.fa ; '
         'fi '
