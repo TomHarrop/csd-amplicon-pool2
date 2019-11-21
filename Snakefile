@@ -26,7 +26,7 @@ def aggregate_raw_reads(wildcards):
 
 sample_key = 'data/Pool 2 barcodes.csv'
 
-bbduk_container = 'shub://TomHarrop/singularity-containers:bbmap_38.00'
+bbduk_container = 'shub://TomHarrop/singularity-containers:bbmap_38.50b'
 bioconductor_container = 'shub://TomHarrop/singularity-containers:bioconductor_3.9'
 biopython_container = 'shub://TomHarrop/singularity-containers:biopython_1.73'
 canu = ('shub://TomHarrop/assemblers:canu_1.9'
