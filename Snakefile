@@ -160,7 +160,7 @@ rule extract_bam_records:
         'in={input.bam} '
         'names={input.ids} '
         'include=t '
-        'out={output} '
+        'out={output.bam} '
         '2> {log} '
         '; '
         'samtools index {output.bam}'
