@@ -122,7 +122,7 @@ rule assemble_mapped_reads:
         'canu '
         '-p {params.prefix} '
         '-d {params.outdir} '
-        'genomeSize={params.size} '
+        # 'genomeSize={params.size} '
         'corMinCoverage=0 '
         'corOutCoverage=10000 '
         '-nanopore-raw {input.fq} '
