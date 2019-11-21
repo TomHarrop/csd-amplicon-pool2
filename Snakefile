@@ -3,6 +3,7 @@
 import csv
 import fileinput
 import multiprocessing
+import os
 import pathlib
 import re
 
@@ -234,11 +235,18 @@ rule translate_consensus:
     script:
         'src/translate_consensus.py'
 
+def aggregate_haps(wildcards):
+    chkpt_output = checkpoints.extract_derived_cds.get(**wildcards).output['haps']
+    h = glob_wildcards(os.path.join(chkpt_output, 'h{h}.fa')).h
+    return expand(('output/050_derived-alleles/{{run}}/{indiv}/'
+                   'cds_h{h}.fa'),
+                  indiv=wildcards.indiv,
+                  h=h)
+
 rule combine_cds:
     input:
-        expand('output/050_derived-alleles/{{run}}/{indiv}/cds_h{h}.fa',
-               indiv=all_indivs,
-               h=[1, 2])
+        expand('output/000_tmp/{{run}}/{indiv}/all_haps.fa',
+               indiv=all_indivs)
     output:
         'output/050_derived-alleles/{run}/consensus_all-indivs.fa'
     singularity:
@@ -246,9 +254,21 @@ rule combine_cds:
     shell:
         'cat {input} > {output}'
 
+
+rule combine_haps:
+    input:
+        aggregate_haps
+    output:
+        'output/000_tmp/{run}/{indiv}/all_haps.fa'
+    singularity:
+        samtools_container
+    shell:
+        'cat {input} > {output}'
+
+
 rule condense_cds:
     input:
-        'output/000_tmp/{run}/{indiv}/cds_h{h}.fa'
+        'output/000_tmp/{run}/{indiv}/haps/h{h}.fa'
     output:
         'output/050_derived-alleles/{run}/{indiv}/cds_h{h}.fa'
     params:
@@ -260,14 +280,13 @@ rule condense_cds:
         'grep -v "^>" {input} >> {output}'
 
 
-rule extract_derived_cds:
+checkpoint extract_derived_cds:
     input:
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna',
         regions = 'output/005_ref/hvr_dt.txt',
         vcf = 'output/040_variant-annotation/{run}/{indiv}/filtered.vcf.gz'
     output:
-        h1 = 'output/000_tmp/{run}/{indiv}/cds_h1.fa',
-        h2 = 'output/000_tmp/{run}/{indiv}/cds_h2.fa'
+        haps = directory('output/000_tmp/{run}/{indiv}/haps')
     log:
         'output/logs/050_derived-alleles/{run}_{indiv}_consensus.log'
     singularity:
@@ -282,7 +301,7 @@ rule extract_derived_cds:
         '-s {wildcards.indiv} '
         '-H 1 '
         '{input.vcf} '
-        '> {output.h1} '
+        '> {output.haps}/h1.fa '
         '2>> {log} '
         '; '
         'samtools faidx '
@@ -294,11 +313,13 @@ rule extract_derived_cds:
         '-s {wildcards.indiv} '
         '-H 2 '
         '{input.vcf} '
-        '> {output.h2} '
+        '> {output.haps}/h2.fa '
         '> {output} '
         '2>> {log} '
         '| '
-        'if [ -s {output.h2} ] ; then rm {output.h2} ; fi '
+        'if [ -s {output.haps}/h2.fa ] ; '
+        'then rm {output.haps}/h2.fa ; '
+        'fi '
 
 # use the filtered list to extract SNPs from the non-broken VCF
 rule merge_filtered_variants:  # DOESN'T WORK, RUN PER INDIV
