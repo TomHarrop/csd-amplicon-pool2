@@ -94,7 +94,7 @@ rule target:
         #              'all-indivs'
         #              # 'drones'
         #             ]),
-        expand('output/060_reassembly/{run}/{indiv}_read-ids.txt',
+        expand('output/060_reassembly/{run}/{indiv}.bam.bai',
                run=[
                    # 'flongle',
                    'minion'
@@ -144,6 +144,23 @@ rule extract_mapped_reads:
         '{input.ids} '
         '> {output}'
 
+rule extract_bam_records:
+    input:
+        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
+        ids = 'output/060_reassembly/{run}/{indiv}_read-ids.txt'
+    output:
+        'output/060_reassembly/{run}/{indiv}.bam'
+    log:
+        'output/logs/060_reassembly/{run}/{indiv}_extract_bam_records.log'
+    singularity:
+        bbduk_container
+    shell:
+        'filterbyname.sh '
+        'in={input.bam} '
+        'names={input.ids} '
+        'include=t '
+        'out={output} '
+        '2> {log}'
 
 rule extract_mapped_read_ids:
     input:
