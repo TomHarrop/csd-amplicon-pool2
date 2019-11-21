@@ -264,11 +264,12 @@ rule extract_derived_cds:
     input:
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna',
         regions = 'output/005_ref/hvr_dt.txt',
-        vcf = 'output/040_variant-annotation/{run}/{indiv}/filtered_h{h}.vcf.gz'
+        vcf = 'output/040_variant-annotation/{run}/{indiv}/filtered.vcf.gz'
     output:
-        'output/000_tmp/{run}/{indiv}/cds_h{h}.fa',
+        h1 = 'output/000_tmp/{run}/{indiv}/cds_h1.fa',
+        h2 = 'output/000_tmp/{run}/{indiv}/cds_h2.fa'
     log:
-        'output/logs/050_derived-alleles/{run}_{indiv}_h{h}_consensus.log'
+        'output/logs/050_derived-alleles/{run}_{indiv}_consensus.log'
     singularity:
         samtools_container
     shell:
@@ -279,10 +280,23 @@ rule extract_derived_cds:
         '| '
         'bcftools consensus '
         '-s {wildcards.indiv} '
+        '-H 1 '
         '{input.vcf} '
+        '> {output.h1} '
+        '2>> {log} '
+        '; '
+        'samtools faidx '
+        '{input.fa} '
+        '$(cat {input.regions}) '
+        '2>> {log} '
+        '| '
+        'bcftools consensus '
+        '-s {wildcards.indiv} '
+        '-H 2 '
+        '{input.vcf} '
+        '> {output.h2} '
         '> {output} '
         '2>> {log} '
-
 
 # use the filtered list to extract SNPs from the non-broken VCF
 rule merge_filtered_variants:  # DOESN'T WORK, RUN PER INDIV
@@ -331,10 +345,10 @@ rule merge_filtered_variants:  # DOESN'T WORK, RUN PER INDIV
 
 rule extract_filtered_variants:
     input:
-        vcf = 'output/000_tmp/{run}/{indiv}/h{h}/withid.vcf.gz',
-        keep = 'output/000_tmp/{run}/{indiv}/snps-to-keep_h{h}.txt'
+        vcf = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz',
+        keep = 'output/000_tmp/{run}/{indiv}/snps-to-keep.txt'
     output:
-        'output/040_variant-annotation/{run}/{indiv}/filtered_h{h}.vcf'
+        'output/040_variant-annotation/{run}/{indiv}/filtered.vcf'
     singularity:
         samtools_container
     shell:
@@ -346,9 +360,9 @@ rule extract_filtered_variants:
 
 rule list_filtered_variants:
     input:
-        'output/000_tmp/{run}/{indiv}/csd_h{h}.vcf'
+        'output/000_tmp/{run}/{indiv}/csd.vcf'
     output:
-        'output/000_tmp/{run}/{indiv}/snps-to-keep_h{h}.txt'
+        'output/000_tmp/{run}/{indiv}/snps-to-keep.txt'
     singularity:
         samtools_container
     shell:
@@ -361,12 +375,12 @@ rule filter_csd_variants:
     input:
         txdb = 'output/005_ref/txdb.sqlite',
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna',
-        vcf = 'output/000_tmp/{run}/{indiv}/h{h}/withid.vcf.gz',
-        tbi = 'output/000_tmp/{run}/{indiv}/h{h}/withid.vcf.gz.tbi',
+        vcf = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz',
+        tbi = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz.tbi',
     output:
-        csd = 'output/000_tmp/{run}/{indiv}/csd_h{h}.vcf'
+        csd = 'output/000_tmp/{run}/{indiv}/csd.vcf'
     log:
-        'output/logs/040_variant-annotation/{run}-{indiv}-h{h}-filter_csd_variants.log'
+        'output/logs/040_variant-annotation/{run}-{indiv}-filter_csd_variants.log'
     singularity:
         bioconductor_container
     script:
@@ -374,9 +388,9 @@ rule filter_csd_variants:
 
 rule add_snp_ids:   # otherwise annotate_variants makes them up
     input:
-        'output/000_tmp/{run}/{indiv}/h{h}/withsample.vcf'
+        'output/000_tmp/{run}/{indiv}/withsample.vcf'
     output:
-        'output/000_tmp/{run}/{indiv}/h{h}/withid.vcf'
+        'output/000_tmp/{run}/{indiv}/withid.vcf'
     singularity:
         samtools_container
     shell:
@@ -387,9 +401,9 @@ rule add_snp_ids:   # otherwise annotate_variants makes them up
 # calling
 rule add_sample_to_medaka:
     input:
-        'output/035_medaka/{run}/{indiv}/round_1_hap_{h}.vcf'
+        'output/035_medaka/{run}/{indiv}/round_1_phased.vcf',
     output:
-        'output/000_tmp/{run}/{indiv}/h{h}/withsample.vcf'
+        'output/000_tmp/{run}/{indiv}/withsample.vcf'
     singularity:
         samtools_container
     shell:
