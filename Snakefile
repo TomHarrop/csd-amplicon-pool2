@@ -29,8 +29,9 @@ sample_key = 'data/Pool 2 barcodes.csv'
 bbduk_container = 'shub://TomHarrop/singularity-containers:bbmap_38.00'
 bioconductor_container = 'shub://TomHarrop/singularity-containers:bioconductor_3.9'
 biopython_container = 'shub://TomHarrop/singularity-containers:biopython_1.73'
+canu = ('shub://TomHarrop/assemblers:canu_1.9'
+        '@b40799da63462ba5d76fcc3cfe158053e81af736')
 clustalo = 'shub://TomHarrop/singularity-containers:clustalo_1.2.4'
-flye = 'shub://TomHarrop/singularity-containers:flye_2.5'
 freebayes_container = 'shub://TomHarrop/singularity-containers:freebayes_1.2.0'
 medaka = ('shub://TomHarrop/ont-containers:medaka_v0.10.1'
           '@616f9abba91d1271dbba2ef245f97c59b65e68c5')
@@ -93,7 +94,7 @@ rule target:
         #              'all-indivs'
         #              # 'drones'
         #             ]),
-        expand('output/060_reassembly/{run}/{indiv}/assembly.fasta',
+        expand('output/060_reassembly/{run}/{indiv}/canu.contigs.fasta',
                run=[
                    # 'flongle',
                    'minion'
@@ -106,25 +107,26 @@ rule assemble_mapped_reads:
     input:
         fq = 'output/060_reassembly/{run}/{indiv}.fq'
     output:
-        'output/060_reassembly/{run}/{indiv}/assembly.fasta'
+        'output/060_reassembly/{run}/{indiv}/canu.contigs.fasta'
     params:
         outdir = 'output/060_reassembly/{run}/{indiv}',
-        size = '500'
+        size = '500',
+        prefix = 'canu'
     threads:
         multiprocessing.cpu_count()
     log:
         'output/logs/060_reassembly/{run}/{indiv}_assemble.log'
     singularity:
-        flye
+        canu
     shell:
-        'flye '
-        '--iterations 2 '
-        '--nano-raw {input.fq} '
-        '--genome-size {params.size} '
-        '--out-dir {params.outdir} '
-        '--threads {threads} '
-        '&>> {log}'
-
+        'canu '
+        '-p {params.prefix} '
+        '-d {params.outdir} '
+        'genomeSize={params.size} '
+        'corMinCoverage=0 '
+        'corOutCoverage=10000 '
+        '-nanopore-raw {input.fq} '
+        '&> {log}'
 
 rule extract_mapped_reads:
     input:
