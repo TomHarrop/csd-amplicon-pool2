@@ -12,6 +12,7 @@ regions_file <- snakemake@output[["regions"]]
 
 # dev
 # gff_file <- "data/GCF_003254395.2_Amel_HAv3.1_genomic.gff"
+# gff_file <- "data/Amel_v4.5_refseq_withRefSeqChrIds.gff3"
 
 # make a TXDB
 txdb <- makeTxDbFromGFF(file = gff_file,
