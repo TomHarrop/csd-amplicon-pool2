@@ -13,7 +13,7 @@ txdb_file <- snakemake@output[["txdb"]]
 # read the txdb
 txdb <- makeTxDbFromGFF(file = gff_file,
                         format = "gff3",
-                        dataSource = "Amel_HAv3.1",
+                        dataSource = "Amel_v4.5",
                         organism = "Apis mellifera",
                         taxonomyId = 7460)
 

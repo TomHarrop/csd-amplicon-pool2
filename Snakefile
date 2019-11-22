@@ -282,7 +282,7 @@ rule condense_cds:
 
 checkpoint extract_derived_cds:
     input:
-        fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna',
+        fa = 'data/Amel_4.5_withRefSeqChrIds.fa',
         regions = 'output/005_ref/hvr_dt.txt',
         vcf = 'output/040_variant-annotation/{run}/{indiv}/filtered.vcf.gz'
     output:
@@ -397,7 +397,7 @@ rule list_filtered_variants:
 rule filter_csd_variants:
     input:
         txdb = 'output/005_ref/txdb.sqlite',
-        fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna',
+        fa = 'data/Amel_4.5_withRefSeqChrIds.fa',
         vcf = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz',
         tbi = 'output/000_tmp/{run}/{indiv}/withid.vcf.gz.tbi',
     output:
@@ -436,7 +436,7 @@ rule add_sample_to_medaka:
 rule medaka:
     input:
         bam = 'output/060_reassembly/{run}/{indiv}.bam',
-        fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
+        fa = 'data/Amel_4.5_withRefSeqChrIds.fa'
     output:
         'output/035_medaka/{run}/{indiv}/round_1_phased.vcf',
         'output/035_medaka/{run}/{indiv}/round_1_hap_1.vcf',
@@ -545,7 +545,7 @@ rule sort_sam:
 rule map_to_genome:
     input:
         fq = 'output/010_raw/{run}/{indiv}_porechop.fq',
-        ref = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
+        ref = 'data/Amel_4.5_withRefSeqChrIds.fa'
     output:
         temp('output/020_mapped/{run}/{indiv}.sam')
     params:
@@ -601,7 +601,7 @@ rule remove_ont_adaptors:
 # processing
 rule generate_txdb:
     input:
-        gff = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.gff',
+        gff = 'data/Amel_v4.5_refseq_withRefSeqChrIds.gff3',
     output:
         txdb = 'output/005_ref/txdb.sqlite'
     log:
@@ -625,7 +625,7 @@ rule aggregate_reads:
 
 rule prepare_ref:
     input:
-        'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
+        'data/Amel_4.5_withRefSeqChrIds.fa'
     output:
         'output/010_raw/honeybee_ref.mmi'
     log:
@@ -647,7 +647,7 @@ rule prepare_ref:
 # generic csd rules
 rule extract_hvr_exon:
     input:
-        gff = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.gff'
+        gff = 'data/Amel_v4.5_refseq_withRefSeqChrIds.gff3'
     output:
         regions = 'output/005_ref/hvr_dt.txt'
     log:
