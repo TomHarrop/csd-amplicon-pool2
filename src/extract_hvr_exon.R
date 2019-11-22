@@ -17,14 +17,14 @@ regions_file <- snakemake@output[["regions"]]
 # make a TXDB
 txdb <- makeTxDbFromGFF(file = gff_file,
                         format = "gff3",
-                        dataSource = "Amel_HAv3.1",
+                        dataSource = "Amel_v4.5",
                         organism = "Apis mellifera",
                         taxonomyId = 7460)
 # get features
 all_exons <- exonsBy(txdb, "gene")
 
 # find the exon
-hvr_exon <- all_exons$Csd[mcols(all_exons$Csd)$exon_name == "id75802"]
+# hvr_exon <- all_exons$Csd[mcols(all_exons$Csd)$exon_name == "id75802"]
 hvr_dt <- as.data.table(hvr_exon)
 outlines <- hvr_dt[, paste0(seqnames, ":", start, "-", end)]
 
