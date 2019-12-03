@@ -16,7 +16,7 @@ def aggregate_raw_reads(wildcards):
     my_bc = indiv_to_bc[wildcards.indiv]
     my_bc_str = re.findall('\d+', my_bc)[0]
     my_bc_folder = 'barcode' + my_bc_str
-    my_path = f'data/reads/{wildcards.run}/pass/{my_bc_folder}'
+    my_path = f'data/reads2/{wildcards.run}/pass/{my_bc_folder}'
     my_files = pathlib.Path(my_path).glob('*.fastq')
     return([str(x) for x in my_files])
 
