@@ -95,6 +95,8 @@ rule target:
                      'all-indivs'
                      # 'drones'
                     ]),
+        expand('output/020_mapped/{run}/merged.bam',
+               run=['minion'])
         # expand('output/060_reassembly/{run}/{indiv}.bam.bai',
         #        run=[
         #            # 'flongle',
