@@ -21,6 +21,18 @@ def aggregate_raw_reads(wildcards):
     return([str(x) for x in my_files])
 
 
+# this aggregates haplotypes from the extract_derived_cds rule, i.e.
+# checks if there were one or two haplotypes detected
+def aggregate_haps(wildcards):
+    chkpt_output = checkpoints.extract_derived_cds.get(**wildcards).output['haps']
+    h = glob_wildcards(os.path.join(chkpt_output, 'h{h}.fa')).h
+    return expand(('output/050_derived-alleles/{{run}}/{indiv}/'
+                   'cds_h{h}.fa'),
+                  indiv=wildcards.indiv,
+                  h=h)
+
+
+
 ###########
 # GLOBALS #
 ###########
@@ -95,17 +107,34 @@ rule target:
                      'all-indivs'
                      # 'drones'
                     ]),
-        expand('output/020_mapped/{run}/merged.bam',
+        expand('output/070_merged/{run}.bam',
                run=['minion'])
-        # expand('output/060_reassembly/{run}/{indiv}.bam.bai',
-        #        run=[
-        #            # 'flongle',
-        #            'minion'
-        #             ],
-        #        indiv=all_indivs)
 
 
-# re-assembly pipeline
+rule merge_bam: # for visualisation
+    input:
+        expand('output/025_filtering/{{run}}/{indiv}.bam',
+               indiv=all_indivs)
+    output:
+        'output/070_merged/{run}.bam'
+    log:
+        'output/logs/070_merged/{run}.log'
+    threads:
+        multiprocessing.cpu_count()
+    singularity:
+        sambamba_container
+    shell:
+        'sambamba merge '
+        '--nthreads={threads} '
+        '--compression-level=9 '
+        '{output} '
+        '{input} '
+        '2> {log} '
+        '; '
+        'sambamba index {output} 2>> {log}'
+
+
+# re-assemble (not really working)
 rule assemble_mapped_reads:
     input:
         fq = 'output/060_reassembly/{run}/{indiv}.fq'
@@ -146,42 +175,6 @@ rule extract_mapped_reads:
         '{input.fq} '
         '{input.ids} '
         '> {output}'
-
-rule extract_bam_records:
-    input:
-        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
-        ids = 'output/060_reassembly/{run}/{indiv}_read-ids.txt'
-    output:
-        bam = 'output/060_reassembly/{run}/{indiv}.bam',
-        bai = 'output/060_reassembly/{run}/{indiv}.bam.bai',
-    log:
-        'output/logs/060_reassembly/{run}/{indiv}_extract_bam_records.log'
-    singularity:
-        bbduk_container
-    shell:
-        'filterbyname.sh '
-        'in={input.bam} '
-        'names={input.ids} '
-        'include=t '
-        'out={output.bam} '
-        '2> {log} '
-        '; '
-        'samtools index {output.bam}'
-
-rule extract_mapped_read_ids:
-    input:
-        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
-        bai = 'output/020_mapped/{run}/{indiv}_sorted.bam.bai'
-    output:
-        ids = 'output/060_reassembly/{run}/{indiv}_read-ids.txt'
-    log:
-        'output/logs/060_reassembly/{run}/{indiv}_extract_mapped_read_ids.log'
-    threads:
-        1
-    singularity:
-        pysam
-    script:
-        'src/extract_mapped_read_ids.py'
 
 # extract and analyse results
 rule align_consensus:
@@ -236,14 +229,6 @@ rule translate_consensus:
         biopython_container
     script:
         'src/translate_consensus.py'
-
-def aggregate_haps(wildcards):
-    chkpt_output = checkpoints.extract_derived_cds.get(**wildcards).output['haps']
-    h = glob_wildcards(os.path.join(chkpt_output, 'h{h}.fa')).h
-    return expand(('output/050_derived-alleles/{{run}}/{indiv}/'
-                   'cds_h{h}.fa'),
-                  indiv=wildcards.indiv,
-                  h=h)
 
 rule combine_cds:
     input:
@@ -437,7 +422,7 @@ rule add_sample_to_medaka:
 
 rule medaka:
     input:
-        bam = 'output/060_reassembly/{run}/{indiv}.bam',
+        bam = 'output/025_filtering/{run}/{indiv}.bam',
         fa = 'data/GCF_003254395.2_Amel_HAv3.1_genomic.fna'
     output:
         'output/035_medaka/{run}/{indiv}/round_1_phased.vcf',
@@ -465,29 +450,55 @@ rule medaka:
         '-t {threads} '
         '&> {log}'
 
-# mapping
-rule merge_bam: # for visualisation
-    input:
-        expand('output/020_mapped/{{run}}/{indiv}_sorted.bam',
-               indiv=all_indivs)
-    output:
-        'output/020_mapped/{run}/merged.bam'
-    log:
-        'output/logs/020_mapped/{run}/merge.log'
-    threads:
-        multiprocessing.cpu_count()
-    singularity:
-        sambamba_container
-    shell:
-        'sambamba merge '
-        '--nthreads={threads} '
-        '--compression-level=9 '
-        '{output} '
-        '{input} '
-        '2> {log} '
-        '; '
-        'sambamba index {output} 2>> {log}'
 
+# filter mapping results
+rule extract_bam_records:
+    input:
+        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
+        ids = 'output/025_filtering/{run}/{indiv}_read-ids.txt'
+    output:
+        bam = 'output/025_filtering/{run}/{indiv}.bam',
+        bai = 'output/025_filtering/{run}/{indiv}.bam.bai',
+    log:
+        'output/logs/025_filtering/{run}/{indiv}_extract_bam_records.log'
+    singularity:
+        bbduk_container
+    shell:
+        'filterbyname.sh '
+        'in={input.bam} '
+        'names={input.ids} '
+        'include=t '
+        'out=stdout.sam '
+        '2> {log} '
+        '| '
+        'samtools view '
+        '-F 256 '
+        '-q 30 '
+        '-b '
+        '-o {output.bam} '
+        '- '
+        '; '
+        'samtools index {output.bam}'
+
+rule extract_mapped_read_ids:
+    input:
+        bam = 'output/020_mapped/{run}/{indiv}_sorted.bam',
+        bai = 'output/020_mapped/{run}/{indiv}_sorted.bam.bai'
+    output:
+        ids = 'output/025_filtering/{run}/{indiv}_read-ids.txt'
+    params:
+        hvr_coverage = 0.7      # has to be a float?
+    log:
+        'output/logs/025_filtering/{run}/{indiv}_extract_mapped_read_ids.log'
+    threads:
+        1
+    singularity:
+        pysam
+    script:
+        'src/extract_mapped_read_ids.py'
+
+
+# mapping
 rule sort_sam:
     input:
         'output/020_mapped/{run}/{indiv}.sam'
