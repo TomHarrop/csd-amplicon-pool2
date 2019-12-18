@@ -267,7 +267,8 @@ rule combine_cds:
 
 rule combine_haps:
     input:
-        aggregate_haps
+        # aggregate_haps, # skip this for now, it's slow
+        'output/050_derived-alleles/{run}/{indiv}/cds_h1.fa'
     output:
         'output/000_tmp/{run}/{indiv}/all_haps.fa'
     singularity:
