@@ -108,6 +108,9 @@ rule target:
                      # 'drones'
                     ]),
         expand('output/070_merged/{run}.bam',
+               run=['minion']),
+        expand('output/080_read-clusters/{run}/{indiv}.paf',
+               indiv=all_indivs,
                run=['minion'])
 
 
@@ -162,12 +165,29 @@ rule assemble_mapped_reads:
         '-nanopore-raw {input.fq} '
         '&> {log}'
 
+rule overlap_mapped_reads:
+    input:
+        'output/025_filtering/{run}/{indiv}.fq'
+    output:
+        'output/080_read-clusters/{run}/{indiv}.paf'
+    log:
+        'output/logs/080_read-clusters/{run}.{indiv}.log'
+    singularity:
+        minimap_container
+    shell:
+        'minimap2 '
+        '-x ava-ont '
+        '{input} {input} '
+        '> {output} '
+        '2> {log}'
+
+
 rule extract_mapped_reads:
     input:
-        ids = 'output/060_reassembly/{run}/{indiv}_read-ids.txt',
+        ids = 'output/025_filtering/{run}/{indiv}_read-ids.txt',
         fq = 'output/010_raw/{run}/{indiv}_porechop.fq'
     output:
-        'output/060_reassembly/{run}/{indiv}.fq'
+        'output/025_filtering/{run}/{indiv}.fq'
     singularity:
         seqtk
     shell:

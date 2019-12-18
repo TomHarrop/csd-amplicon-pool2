@@ -6,8 +6,9 @@ library(ggplot2)
 
 
 # dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/minion/all-indivs_aa.dist"
-dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/minion/all-indivs_aa.dist"
+# dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/minion/all-indivs_aa.dist"
 # dist_file <- "/cifs/ro_deardenlabarchive/tomharrop/projects/csd-amplicon-pool2/output/050_derived-alleles/flongle/drones_aa.dist"
+dist_file <- "output_bcc/050_derived-alleles/minion/all-indivs_aa.dist"
 
 dist_dt <- fread(dist_file, header = FALSE)
 setnames(dist_dt, names(dist_dt), c("V1", dist_dt[, V1]))
