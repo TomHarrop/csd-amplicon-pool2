@@ -172,10 +172,13 @@ rule overlap_mapped_reads:
         'output/080_read-clusters/{run}/{indiv}.paf'
     log:
         'output/logs/080_read-clusters/{run}.{indiv}.log'
+    threads:
+        multiprocessing.cpu_count()
     singularity:
         minimap_container
     shell:
         'minimap2 '
+        '-t {threads} '
         '-x ava-ont '
         '{input} {input} '
         '> {output} '
